@@ -12,6 +12,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 @DataJpaTest
 public class UserEntityIntegrationTest {
 
@@ -63,14 +65,33 @@ public class UserEntityIntegrationTest {
 
         //Assert & Act
 
-        Assertions.assertThrows(PersistenceException.class,  () -> {
+        assertThrows(PersistenceException.class,  () -> {
             testEntityManager.persistAndFlush(userEntity);
 
         }, "Was expecting a PersistanceException to be thrown.");
     }
 
 
+    @Test
+    void testUserEntity_whenUserIdIsNotUnique_shouldThrowException() {
+        //Arrange
+        UserEntity newEntity = new UserEntity();
+        newEntity.setUserId("1");
+        newEntity.setFirstName("test");
+        newEntity.setLastName("one");
+        newEntity.setEmail("testone@test.com");
+        newEntity.setEncryptedPassword("12345678");
+        testEntityManager.persistAndFlush(newEntity);
 
+        //update existing user entity with the same user id
+        userEntity.setUserId("1");
+
+        //Act & Assert
+        assertThrows(PersistenceException.class, () -> {
+            testEntityManager.persistAndFlush(userEntity);
+        }, "Expected PresistanceException to be thrown here");
+
+    }
 
 
 
